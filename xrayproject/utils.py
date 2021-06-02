@@ -61,7 +61,7 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
 
 
 def spurious_funct():
-    return "Does this exist? (I am not Camus. (Really. (Bugz.)))"
+    return "Does this exist? (I am not Camus. (Really. (Bugz-n-suqidz.)))"
 
 def get_filenames(path):
     list_of_filenames = []
