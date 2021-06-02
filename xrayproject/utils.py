@@ -60,6 +60,9 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     return list_of_images, targets
 
 
+def spurious_funct():
+    return "Does this exist? (I am not Camus.)"
+
 def get_filenames(path):
     list_of_filenames = []
     print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
@@ -69,13 +72,13 @@ def get_filenames(path):
         for filename in filenames:
             if filename.endswith('.png'):
                 list_of_filenames.append(os.path.join(dirname, filename))
-    return list_of_filenames 
+    return list_of_filenames
 
 
 def load_png(file):
     image = tf.io.read_file(file)
     image = tf.io.decode_png(image)
-    return image 
+    return image
 
 if __name__ == '__main__':
     print(load_png(0))
