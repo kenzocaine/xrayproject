@@ -10,7 +10,7 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     # Only set get_all = True if you running on the cloud
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
-
+    print('hello')
     list_of_filenames = get_filenames(path)
     list_of_images = []
     targets = []
