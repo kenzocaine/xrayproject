@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 import random
 
-def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced = True):
+def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced = True, path = ''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
     # If balanced = True, will attempt to divide n into equal parts of positive and negative samples
     # If random, will choose random images
@@ -11,7 +11,7 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
 
-    list_of_filenames = get_filenames()
+    list_of_filenames = get_filenames(path)
     list_of_images = []
     targets = []
     if get_all:
@@ -60,10 +60,12 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     return list_of_images, targets
 
 
-def get_filenames():
+def get_filenames(path):
     list_of_filenames = []
     print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
-    for dirname, _, filenames in os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
+   # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
+
+    for dirname, _, filenames in os.walk(path):
         for filename in filenames:
             if filename.endswith('.png'):
                 list_of_filenames.append(os.path.join(dirname, filename))
