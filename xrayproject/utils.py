@@ -10,7 +10,7 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     # Only set get_all = True if you running on the cloud
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
-    print('hello')
+    # print('hello')
     list_of_filenames = get_filenames(path)
     list_of_images = []
     targets = []
@@ -61,12 +61,12 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
 
 
 def spurious_funct():
-    return "Does this exist? (I am not Camus.)"
+    return "Does this exist? (I am not Camus. (Really. (Bugz.)))"
 
 def get_filenames(path):
     list_of_filenames = []
-    print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
-   # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
+    # print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
+    # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
 
     for dirname, _, filenames in os.walk(path):
         for filename in filenames:
