@@ -10,7 +10,11 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     # Only set get_all = True if you running on the cloud
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
+<<<<<<< HEAD
     # print('hello')
+=======
+    print('hello again and again')
+>>>>>>> ac2fdbe56566501dbc751b926a9e6894b275bc39
     list_of_filenames = get_filenames(path)
     list_of_images = []
     targets = []
@@ -64,6 +68,8 @@ def spurious_funct():
     return "Does this exist? (I am not Camus. (Really. (Bugz.)))"
 
 def get_filenames(path):
+    # Helper function
+    # Do not use this function directly
     list_of_filenames = []
     # print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
     # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
@@ -76,6 +82,8 @@ def get_filenames(path):
 
 
 def load_png(file):
+    # Helper function
+    # Do not use this function directly
     image = tf.io.read_file(file)
     image = tf.io.decode_png(image)
     return image
