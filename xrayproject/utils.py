@@ -1,6 +1,10 @@
 import os
 import tensorflow as tf
 import random
+import numpy as np
+import PIL
+from PIL import Image
+
 
 def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced = True, path = ''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
@@ -101,3 +105,18 @@ def load_png(file):
 
 if __name__ == '__main__':
     print(load_png(0))
+
+def get_img_heights(path):
+    list_of_filenames = get_filenames(path)
+    img_heights = np.array([Image.open(file).size[0] for file in list_of_filenames])
+    return img_heights.max(), img_heights.min(), img_heights.mean(), img_heights.std()
+
+def get_img_widths(path):
+    list_of_filenames = get_filenames(path)
+    img_widths = np.array([Image.open(file).size[1] for file in list_of_filenames])
+    return img_widths.max(), img_widths.min(), img_widths.mean(), img_widths.std()
+
+def get_img_sizes(path):
+    list_of_filenames = get_filenames(path)
+    img_sizes = np.array([Image.open(file).size for file in list_of_filenames])
+    return img_sizes
