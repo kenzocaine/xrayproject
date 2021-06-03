@@ -6,7 +6,7 @@ import PIL
 from PIL import Image
 
 
-def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced = True, path = ''):
+def load_masks(n=1, get_all=False, get_random = True, balanced = True, path =''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
     # If balanced = True, will attempt to divide n into equal parts of positive and negative samples
     # If random, will choose random images
@@ -23,23 +23,22 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
         for file in list_of_filenames:
             image = load_png(file)
             list_of_images.append(image)
-            targets.append(int(file[-5]))
+            targets.append(int(os.path.basename(file).split('_')[2]))
             ID.append(int(os.path.basename(file).split('_')[1]))
         return list_of_images, targets, ID
 
     # Extract positive and negative samples
     positive, negative = [], []
     for file in list_of_filenames:
-        if int(file[-5]):
+        if int(os.path.basename(file).split('_')[2]):
             positive.append(file)
         else:
             negative.append(file)
-
     if get_random:
         if n == 1:
             rand_index = random.randint(0, len(list_of_filenames))
             file = list_of_filenames[rand_index]
-            return load_png(file), int(file[-5]), os.path.basename(file).split('_')[1]
+            return load_png(file), int(os.path.basename(file).split('_')[2]), os.path.basename(file).split('_')[1]
         if balanced:
             pos = int(n/2)
             neg = int(n - pos)
@@ -47,30 +46,30 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
             rand_list_neg = [random.randint(0, len(negative)) for i in range(neg)]
             for i in rand_list_pos:
                 list_of_images.append(load_png(positive[i]))
-                targets.append(int(positive[i][-5]))
+                targets.append(int(os.path.basename(positive[i]).split('_')[2]))
                 ID.append(int(os.path.basename(positive[i]).split('_')[1]))
             for i in rand_list_neg:
                 list_of_images.append(load_png(negative[i]))
-                targets.append(int(negative[i][-5]))
+                targets.append(int(os.path.basename(negative[i]).split('_')[2]))
                 ID.append(int(os.path.basename(negative[i]).split('_')[1]))
             return list_of_images, targets, ID
         else:
             rand_list = [random.randint(0, len(list_of_filenames)) for i in range(n)]
             for i in rand_list:
                 list_of_images.append(load_png(list_of_filenames[i]))
-                targets.append(int(list_of_filenames[i][-5]))
+                targets.append(int(os.path.basename(list_of_filenames[i]).split('_')[2]))
                 ID.append(int(os.path.basename(list_of_filenames[i]).split('_')[1]))
             return list_of_images, targets, ID
 
     for file in list_of_filenames[0:n]:
         image = load_png(file)
         list_of_images.append(image)
-        targets.append(int(file[-5]))
+        targets.append(int(os.path.basename(file).split('_')[2]))
         ID.append(int(os.path.basename(file).split('_')[1]))
     return list_of_images, targets, ID
 
 
-def load_masks(path, ID):
+def load_train(path, ID):
     # Returns the mask (tensor), ID (int)
     list_of_masks = list(range(len(ID)))
     list_of_filenames = get_filenames(path)
