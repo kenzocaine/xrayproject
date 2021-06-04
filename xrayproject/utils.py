@@ -80,6 +80,9 @@ def load_train(path, ID):
                 list_of_masks[index] = load_png(file)
     return list_of_masks, ID
 
+def load_test(path):
+    list_of_filenames = get_filenames(path)
+    pass
 
 def spurious_funct():
     return "Does this exist? (I am not Camus. (Really. (Bugz-n-suqidz.)))"

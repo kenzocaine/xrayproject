@@ -7,9 +7,9 @@ def normalize(input_image, input_mask):
     return input_image, input_mask
 
 
-def flip_resize(image, mask):
-    input_image = tf.image.resize(image, (2897, 2499))
-    input_mask = tf.image.resize(mask, (2897, 2499))
+def flip_resize(image, mask, input_shape=(2897, 2499)):
+    input_image = tf.image.resize(image, input_shape)
+    input_mask = tf.image.resize(mask, input_shape)
 
     input_image, input_mask = normalize(input_image, input_mask)
 
