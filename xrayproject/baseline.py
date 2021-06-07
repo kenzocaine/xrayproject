@@ -22,13 +22,16 @@ class Baseline():
         X_test = X_test.reshape(len(X_test), self.input_shape[0], self.input_shape[1], self.input_shape[2])
 
         self.model = self.initialize_model()
+        print('Starting train..')
         self.model.fit(X_train, np.array(y_train),
                     validation_data = (X_test, np.array(y_test)),
                     epochs=1,  # Use early stop in practice
                     batch_size=32,
                     verbose=1)
+        return self.model
 
     def initialize_model(self):
+        print('Initializing model...')
         model = tf.keras.models.Sequential()
 
         model.add(tf.keras.layers.Conv2D(16, (2,2), input_shape=self.input_shape, activation="relu"))
@@ -50,6 +53,7 @@ class Baseline():
         return model
 
     def preprocessing(self, images, masks):
+        print('Preprocessing...')
         img_p, mask_p, img_flipped, mask_flipped = [], [], [],[]
         for index in range(len(images)):
             img_p_, mask_p_, img_flipped_, mask_flipped_ = flip_resize(images[index], masks[index], self.resize_shape)
