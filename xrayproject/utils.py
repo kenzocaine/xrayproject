@@ -15,7 +15,10 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='')
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
     # print('hello')
+    print('Using path: ', path)
     list_of_filenames = get_filenames(path)
+
+    assert len(list_of_filenames) != 0, 'List of filenames is empty' 
     list_of_images = []
     targets = []
     ID = []
