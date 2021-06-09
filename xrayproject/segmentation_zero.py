@@ -31,24 +31,8 @@ class Segmentation_UNET():
     def base_model(self):
         base_model = tf.keras.applications.MobileNetV2(input_shape=self.input_shape, include_top=False)
 
-        # # Use the activations of these layers
-        # layer_names = [
-        #     'block_1_expand_relu',   # 64x64
-        #     'block_3_expand_relu',   # 32x32
-        #     'block_6_expand_relu',   # 16x16
-        #     'block_13_expand_relu',  # 8x8
-        #     'block_16_project',      # 4x4
-        # ]
-        # base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
-
-        # # Create the feature extraction model
-        # down_stack = tf.keras.Model(inputs=base_model.input, outputs=base_model_outputs)
-
-        # down_stack.trainable = False
-
         return base_model
 
-    # Note: This is directly copied-and-pasted from the TensorFlow tutorial. I am slightly worried that this may refer to items not defined in this function, causing flow issues...
     def unet_model(self):
         base_model = self.base_model()
 
@@ -98,22 +82,6 @@ class Segmentation_UNET():
 
     def initialize_model(self):
         print('Initializing model...')
-        # base_model = tf.keras.applications.MobileNetV2(input_shape=self.input_shape, include_top=False)
-
-        # # Use the activations of these layers
-        # layer_names = [
-        #     'block_1_expand_relu',   # 64x64
-        #     'block_3_expand_relu',   # 32x32
-        #     'block_6_expand_relu',   # 16x16
-        #     'block_13_expand_relu',  # 8x8
-        #     'block_16_project',      # 4x4
-        # ]
-        # base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
-
-        # # Create the feature extraction model
-        # down_stack = tf.keras.Model(inputs=base_model.input, outputs=base_model_outputs)
-
-        # down_stack.trainable = False
 
         model = self.unet_model()
 
@@ -148,8 +116,8 @@ class Segmentation_UNET():
         EPOCHS = 10
         VAL_SUBSPLITS = 5
         VALIDATION_STEPS = len(X_test)//BATCH_SIZE//VAL_SUBSPLITS
-        print(Y_train)
-        print(Y_test)
+        # print(Y_train)
+        # print(Y_test)
         self.model.fit(X_train, Y_train,
                        epochs=EPOCHS,
                        steps_per_epoch=STEPS_PER_EPOCH,
@@ -158,44 +126,3 @@ class Segmentation_UNET():
                        verbose=1)
 
         return self.model
-
-    # def initialize_model_old(self):
-    #     print('Initializing model...')
-    #     model = tf.keras.models.Sequential()
-
-    #     model.add(tf.keras.layers.Conv2D(16, (2,2), input_shape=self.input_shape, activation="relu"))
-    #     #model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
-
-    #     model.add(tf.keras.layers.Conv2D(16, (2,2) , activation="relu"))
-    #     #model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
-
-    #     model.add(tf.keras.layers.Conv2D(32, (2,2) , activation="relu"))
-    #     #model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
-    #     model.add(tf.keras.layers.Flatten())
-    #     model.add(tf.keras.layers.Dense(20, activation='relu')) # intermediate layer
-    #     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
-
-    #     model.compile(loss='binary_crossentropy',
-    #                       optimizer='adam',
-    #                   metrics=['accuracy'])
-
-    #     return model
-
-    # def train_old(self, images, masks, targets):
-    #     img_p, mask_p, img_flipped, mask_flipped = self.preprocessing(images, masks)
-    #     X_train, X_test, y_train, y_test = self.train_split(img_p, targets)
-
-    #     X_train = np.array(X_train)
-    #     X_train = X_train.reshape(len(X_train), self.input_shape[0], self.input_shape[1], self.input_shape[2])
-
-    #     X_test = np.array(X_test)
-    #     X_test = X_test.reshape(len(X_test), self.input_shape[0], self.input_shape[1], self.input_shape[2])
-
-    #     self.model = self.initialize_model()
-    #     print('Starting train..')
-    #     self.model.fit(X_train, np.array(y_train),
-    #                 validation_data = (X_test, np.array(y_test)),
-    #                 epochs=1,  # Use early stop in practice
-    #                 batch_size=32,
-    #                 verbose=1)
-    #     return self.model
