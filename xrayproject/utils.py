@@ -26,14 +26,14 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='')
         for file in list_of_filenames:
             image = load_png(file)
             list_of_images.append(image)
-            targets.append(int(os.path.basename(file).split('_')[2]))
+            targets.append(int(os.path.basename(file)[:-4].split('_')[2]))
             ID.append(int(os.path.basename(file).split('_')[1]))
         return list_of_images, targets, ID
 
     # Extract positive and negative samples
     positive, negative = [], []
     for file in list_of_filenames:
-        if int(os.path.basename(file).split('_')[2]):
+        if int(os.path.basename(file)[:-4].split('_')[2]):
             positive.append(file)
         else:
             negative.append(file)
@@ -67,7 +67,7 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='')
     for file in list_of_filenames[0:n]:
         image = load_png(file)
         list_of_images.append(image)
-        targets.append(int(os.path.basename(file).split('_')[2]))
+        targets.append(int(os.path.basename(file)[:-4].split('_')[2]))
         ID.append(int(os.path.basename(file).split('_')[1]))
     return list_of_images, targets, ID
 
