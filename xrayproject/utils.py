@@ -4,9 +4,9 @@ import random
 import numpy as np
 import PIL
 from PIL import Image
+from google.cloud import storage
 
-
-def load_masks(n=1, get_all=False, get_random = True, balanced = True, path =''):
+def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='', bucket_name=''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
     # If balanced = True, will attempt to divide n into equal parts of positive and negative samples
     # If random, will choose random images
@@ -16,9 +16,11 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='')
     # balanced only works with get_random
     # print('hello')
     print('Using path: ', path)
-    list_of_filenames = get_filenames(path)
+    print('Using bucket', bucket_name)
+    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name)
 
-    assert len(list_of_filenames) != 0, 'List of filenames is empty' 
+    assert len(list_of_filenames) != 0, 'List of filenames is empty'
+    assert len(list_of_filenames) != n, f'Failed loading filenames.Check your path. Attempted loading {list_of_filenames})' 
     list_of_images = []
     targets = []
     ID = []
@@ -72,10 +74,10 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='')
     return list_of_images, targets, ID
 
 
-def load_train(path, ID):
+def load_train(ID, path='', bucket_name='', data='CXR_png'):
     # Returns the mask (tensor), ID (int)
     list_of_masks = list(range(len(ID)))
-    list_of_filenames = get_filenames(path)
+    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name, data=data)
     for file in list_of_filenames:
         file_ID = int(os.path.basename(file).split('_')[1])
         for index, I_D in enumerate(ID):
@@ -84,6 +86,7 @@ def load_train(path, ID):
     return list_of_masks, ID
 
 def load_test(path):
+    # Dont use
     list_of_filenames = get_filenames(path)
     pass
 
@@ -91,10 +94,20 @@ def spurious_funct():
     return "Does this exist? (I am not Camus. (Really. (Bugz-n-suqidz.)))"
 
 
-def get_filenames(path):
+def get_filenames(bucket_name='', path='', data='mask'):
     list_of_filenames = []
+    assert (len(bucket_name) != 0 or len(path) != 0), 'incorrect path format' 
     # print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
    # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
+    if len(bucket_name) != 0:
+        print('Generating list of filenames...')
+        storage_client = storage.Client()
+        blobs = storage_client.list_blobs(bucket_name, prefix=f"data/{data}/", delimiter='/') 
+        for blob in list(blobs):
+            name = 'gs://'+bucket_name + '/' + blob.name
+            if name.endswith('.png'):
+                list_of_filenames.append(name)
+        return list_of_filenames
 
     for dirname, _, filenames in os.walk(path):
         for filename in filenames:
@@ -104,6 +117,14 @@ def get_filenames(path):
 
 
 def load_png(file):
+    if file[0:2] == 'gs':
+        print('Loading blob: ', file)
+        f = tf.io.gfile.GFile(file, 'rb')
+        image = f.read()
+        image = tf.io.decode_png(image)
+        return image
+
+    print('Loading local file: ', file)
     image = tf.io.read_file(file)
     image = tf.io.decode_png(image)
     return image
