@@ -25,7 +25,7 @@ class Baseline():
         print('Starting train..')
         self.model.fit(X_train, np.array(y_train),
                     validation_data = (X_test, np.array(y_test)),
-                    epochs=1,  # Use early stop in practice
+                    epochs=40,  # Use early stop in practice
                     batch_size=32,
                     verbose=1)
         return self.model

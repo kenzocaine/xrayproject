@@ -19,7 +19,8 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='',
     print('Using bucket', bucket_name)
     list_of_filenames = get_filenames(path=path, bucket_name=bucket_name)
 
-    assert len(list_of_filenames) != 0, 'List of filenames is empty' 
+    assert len(list_of_filenames) != 0, 'List of filenames is empty'
+    assert len(list_of_filenames) != n, f'Failed loading filenames.Check your path. Attempted loading {list_of_filenames})' 
     list_of_images = []
     targets = []
     ID = []
@@ -104,7 +105,6 @@ def get_filenames(bucket_name='', path='', data='mask'):
         blobs = storage_client.list_blobs(bucket_name, prefix=f"data/{data}/", delimiter='/') 
         for blob in list(blobs):
             name = 'gs://'+bucket_name + '/' + blob.name
-            print(name)
             if name.endswith('.png'):
                 list_of_filenames.append(name)
         return list_of_filenames

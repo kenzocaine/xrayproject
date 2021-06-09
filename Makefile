@@ -125,7 +125,8 @@ gcp_submit_training:
 		--region ${REGION} \
 		--stream-logs
 
-
+run_api:
+	uvicorn api.fast:app --reload  # load web server with code autoreload
 
 
 
