@@ -42,7 +42,7 @@ def save_model(model):
 
 if __name__ == '__main__':
 
-    masks, targets, ID = load_masks(6, get_all = False, get_random = True,
+    masks, targets, ID = load_masks(50, get_all = False, get_random = True,
                                 balanced =True, bucket_name = BUCKET_NAME)
     images, ID = load_train(ID, bucket_name = BUCKET_NAME)
     input_shape = (579, 500, 3)

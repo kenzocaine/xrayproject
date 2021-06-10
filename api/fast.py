@@ -47,9 +47,8 @@ async def create_predict(file: UploadFile = File(...)):
     im, ma, im_flipped, ma_flipped = flip_resize(image, image, (579, 500))
     image_pred = np.expand_dims(im, axis=0)
     pred = str(model.predict(image_pred))
+
     print('prediction: ', pred)
-
-
     print('Image type: ', type(image))
     print('Image shape: ', image.shape) 
     return {f"file {file.filename}": pred}
