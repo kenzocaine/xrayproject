@@ -4,9 +4,9 @@ import random
 import numpy as np
 import PIL
 from PIL import Image
+from google.cloud import storage
 
-
-def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced = True, path = ''):
+def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='', bucket_name=''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
     # If balanced = True, will attempt to divide n into equal parts of positive and negative samples
     # If random, will choose random images
@@ -15,7 +15,12 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
     # print('hello')
-    list_of_filenames = get_filenames(path)
+    print('Using path: ', path)
+    print('Using bucket', bucket_name)
+    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name)
+
+    assert len(list_of_filenames) != 0, 'List of filenames is empty'
+    assert len(list_of_filenames) != n, f'Failed loading filenames.Check your path. Attempted loading {list_of_filenames})' 
     list_of_images = []
     targets = []
     ID = []
@@ -23,23 +28,22 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
         for file in list_of_filenames:
             image = load_png(file)
             list_of_images.append(image)
-            targets.append(int(file[-5]))
+            targets.append(int(os.path.basename(file).split('_')[2]))
             ID.append(int(os.path.basename(file).split('_')[1]))
         return list_of_images, targets, ID
 
     # Extract positive and negative samples
     positive, negative = [], []
     for file in list_of_filenames:
-        if int(file[-5]):
+        if int(os.path.basename(file).split('_')[2]):
             positive.append(file)
         else:
             negative.append(file)
-
     if get_random:
         if n == 1:
             rand_index = random.randint(0, len(list_of_filenames))
             file = list_of_filenames[rand_index]
-            return load_png(file), int(file[-5]), os.path.basename(file).split('_')[1]
+            return load_png(file), int(os.path.basename(file).split('_')[2]), os.path.basename(file).split('_')[1]
         if balanced:
             pos = int(n/2)
             neg = int(n - pos)
@@ -47,33 +51,33 @@ def load_pngs(n=1, get_all=False, get_target=False, get_random = True, balanced 
             rand_list_neg = [random.randint(0, len(negative)) for i in range(neg)]
             for i in rand_list_pos:
                 list_of_images.append(load_png(positive[i]))
-                targets.append(int(positive[i][-5]))
+                targets.append(int(os.path.basename(positive[i]).split('_')[2]))
                 ID.append(int(os.path.basename(positive[i]).split('_')[1]))
             for i in rand_list_neg:
                 list_of_images.append(load_png(negative[i]))
-                targets.append(int(negative[i][-5]))
+                targets.append(int(os.path.basename(negative[i]).split('_')[2]))
                 ID.append(int(os.path.basename(negative[i]).split('_')[1]))
             return list_of_images, targets, ID
         else:
             rand_list = [random.randint(0, len(list_of_filenames)) for i in range(n)]
             for i in rand_list:
                 list_of_images.append(load_png(list_of_filenames[i]))
-                targets.append(int(list_of_filenames[i][-5]))
+                targets.append(int(os.path.basename(list_of_filenames[i]).split('_')[2]))
                 ID.append(int(os.path.basename(list_of_filenames[i]).split('_')[1]))
             return list_of_images, targets, ID
 
     for file in list_of_filenames[0:n]:
         image = load_png(file)
         list_of_images.append(image)
-        targets.append(int(file[-5]))
+        targets.append(int(os.path.basename(file).split('_')[2]))
         ID.append(int(os.path.basename(file).split('_')[1]))
     return list_of_images, targets, ID
 
 
-def load_masks(path, ID):
+def load_train(ID, path='', bucket_name='', data='CXR_png'):
     # Returns the mask (tensor), ID (int)
     list_of_masks = list(range(len(ID)))
-    list_of_filenames = get_filenames(path)
+    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name, data=data)
     for file in list_of_filenames:
         file_ID = int(os.path.basename(file).split('_')[1])
         for index, I_D in enumerate(ID):
@@ -81,15 +85,29 @@ def load_masks(path, ID):
                 list_of_masks[index] = load_png(file)
     return list_of_masks, ID
 
+def load_test(path):
+    # Dont use
+    list_of_filenames = get_filenames(path)
+    pass
 
 def spurious_funct():
     return "Does this exist? (I am not Camus. (Really. (Bugz-n-suqidz.)))"
 
 
-def get_filenames(path):
+def get_filenames(bucket_name='', path='', data='mask'):
     list_of_filenames = []
+    assert (len(bucket_name) != 0 or len(path) != 0), 'incorrect path format' 
     # print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
    # os.walk(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/')):
+    if len(bucket_name) != 0:
+        print('Generating list of filenames...')
+        storage_client = storage.Client()
+        blobs = storage_client.list_blobs(bucket_name, prefix=f"data/{data}/", delimiter='/') 
+        for blob in list(blobs):
+            name = 'gs://'+bucket_name + '/' + blob.name
+            if name.endswith('.png'):
+                list_of_filenames.append(name)
+        return list_of_filenames
 
     for dirname, _, filenames in os.walk(path):
         for filename in filenames:
@@ -99,6 +117,14 @@ def get_filenames(path):
 
 
 def load_png(file):
+    if file[0:2] == 'gs':
+        print('Loading blob: ', file)
+        f = tf.io.gfile.GFile(file, 'rb')
+        image = f.read()
+        image = tf.io.decode_png(image)
+        return image
+
+    print('Loading local file: ', file)
     image = tf.io.read_file(file)
     image = tf.io.decode_png(image)
     return image

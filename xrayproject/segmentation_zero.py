@@ -91,7 +91,7 @@ class Segmentation_UNET():
 
         return model
 
-    def train(self, images, masks, targets):
+    def train(self, images, masks, targets, epochs=10):
         img_p, mask_p, img_flipped, mask_flipped = self.preprocessing(images, masks)
         X_train, X_test, Y_train, Y_test = self.train_split(img_p, mask_p)
 
@@ -113,7 +113,7 @@ class Segmentation_UNET():
         BATCH_SIZE = min(5, TRAIN_LENGTH)
         BUFFER_SIZE = 10
         STEPS_PER_EPOCH = TRAIN_LENGTH // BATCH_SIZE
-        EPOCHS = 10
+        EPOCHS = epochs
         VAL_SUBSPLITS = 5
         VALIDATION_STEPS = len(X_test)//BATCH_SIZE//VAL_SUBSPLITS
         # print(Y_train)
