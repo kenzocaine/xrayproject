@@ -1,10 +1,13 @@
-import tensorflow as tf
 import numpy as np
-from sklearn.model_selection import train_test_split
-from xrayproject.utils import load_train, load_masks
-from xrayproject.preprocessing import normalize, flip_resize, resize_test
 import matplotlib.pyplot as plt
+
+import tensorflow as tf
 from tensorflow_examples.models.pix2pix import pix2pix
+from sklearn.model_selection import train_test_split
+
+from xrayproject.utils_DAM import load_train, load_masks
+from xrayproject.preprocessing import normalize, flip_resize, resize_test
+
 
 class Segmentation_UNET():
     def __init__(self, input_shape=(224,224,3), output_channels=1):
@@ -31,24 +34,8 @@ class Segmentation_UNET():
     def base_model(self):
         base_model = tf.keras.applications.MobileNetV2(input_shape=self.input_shape, include_top=False)
 
-        # # Use the activations of these layers
-        # layer_names = [
-        #     'block_1_expand_relu',   # 64x64
-        #     'block_3_expand_relu',   # 32x32
-        #     'block_6_expand_relu',   # 16x16
-        #     'block_13_expand_relu',  # 8x8
-        #     'block_16_project',      # 4x4
-        # ]
-        # base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
-
-        # # Create the feature extraction model
-        # down_stack = tf.keras.Model(inputs=base_model.input, outputs=base_model_outputs)
-
-        # down_stack.trainable = False
-
         return base_model
 
-    # Note: This is directly copied-and-pasted from the TensorFlow tutorial. I am slightly worried that this may refer to items not defined in this function, causing flow issues...
     def unet_model(self):
         base_model = self.base_model()
 
@@ -98,22 +85,6 @@ class Segmentation_UNET():
 
     def initialize_model(self):
         print('Initializing model...')
-        # base_model = tf.keras.applications.MobileNetV2(input_shape=self.input_shape, include_top=False)
-
-        # # Use the activations of these layers
-        # layer_names = [
-        #     'block_1_expand_relu',   # 64x64
-        #     'block_3_expand_relu',   # 32x32
-        #     'block_6_expand_relu',   # 16x16
-        #     'block_13_expand_relu',  # 8x8
-        #     'block_16_project',      # 4x4
-        # ]
-        # base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
-
-        # # Create the feature extraction model
-        # down_stack = tf.keras.Model(inputs=base_model.input, outputs=base_model_outputs)
-
-        # down_stack.trainable = False
 
         model = self.unet_model()
 
@@ -123,7 +94,7 @@ class Segmentation_UNET():
 
         return model
 
-    def train(self, images, masks, targets):
+    def train(self, images, masks, epochs=10):
         img_p, mask_p, img_flipped, mask_flipped = self.preprocessing(images, masks)
         X_train, X_test, Y_train, Y_test = self.train_split(img_p, mask_p)
 
@@ -145,11 +116,11 @@ class Segmentation_UNET():
         BATCH_SIZE = min(5, TRAIN_LENGTH)
         BUFFER_SIZE = 10
         STEPS_PER_EPOCH = TRAIN_LENGTH // BATCH_SIZE
-        EPOCHS = 10
+        EPOCHS = epochs
         VAL_SUBSPLITS = 5
         VALIDATION_STEPS = len(X_test)//BATCH_SIZE//VAL_SUBSPLITS
-        print(Y_train)
-        print(Y_test)
+        # print(Y_train)
+        # print(Y_test)
         self.model.fit(X_train, Y_train,
                        epochs=EPOCHS,
                        steps_per_epoch=STEPS_PER_EPOCH,
