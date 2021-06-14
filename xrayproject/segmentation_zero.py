@@ -13,10 +13,10 @@ class UNET():
         self.model = []
         self.channels = input_shape[-1]
 
-    def initialize_unet(self, input_shape):
+    def initialize_unet(self):
         print('Initializing model...')
 
-        inputs = Input(input_size)
+        inputs = Input(self.input_shape)
 
         conv1 = Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
         conv1 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv1)
