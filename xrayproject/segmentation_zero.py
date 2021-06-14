@@ -1,10 +1,7 @@
 import tensorflow as tf
 import numpy as np
-from sklearn.model_selection import train_test_split
-from xrayproject.utils import load_train, load_masks
-from xrayproject.preprocessing import normalize, flip_resize, resize_test
-import matplotlib.pyplot as plt
 from tensorflow_examples.models.pix2pix import pix2pix
+
 
 class Segmentation_UNET():
     def __init__(self, input_shape=(224,224,3), output_channels=1):
@@ -12,21 +9,6 @@ class Segmentation_UNET():
         self.output_channels = output_channels
         self.resize_shape =(self.input_shape[0] , self.input_shape[1])
         self.model = []
-
-    def preprocessing(self, images, masks):
-        print('Preprocessing...')
-        img_p, mask_p, img_flipped, mask_flipped = [], [], [],[]
-        for index in range(len(images)):
-            img_p_, mask_p_, img_flipped_, mask_flipped_ = flip_resize(images[index], masks[index], self.resize_shape)
-            img_p.append(img_p_)
-            mask_p.append(mask_p_)
-            img_flipped.append(img_flipped_)
-            mask_flipped.append(mask_flipped_)
-        return img_p, mask_p, img_flipped, mask_flipped
-
-    def train_split(self, images, masks):
-        X_train, X_test, Y_train, Y_test = train_test_split(images, masks, test_size=0.25)
-        return X_train, X_test, Y_train, Y_test
 
     def base_model(self):
         base_model = tf.keras.applications.MobileNetV2(input_shape=self.input_shape, include_top=False)
@@ -88,12 +70,11 @@ class Segmentation_UNET():
         model.compile(optimizer='adam',
                       loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                       metrics=['accuracy'])
+        self.model = model
 
-        return model
+        return self.model
 
-    def train(self, images, masks, targets):
-        img_p, mask_p, img_flipped, mask_flipped = self.preprocessing(images, masks)
-        X_train, X_test, Y_train, Y_test = self.train_split(img_p, mask_p)
+    def train(self, X_train, Y_train, X_test, Y_test):
 
         X_train = np.array(X_train)
         X_train = X_train.reshape(len(X_train), self.input_shape[0], self.input_shape[1], self.input_shape[2])
@@ -107,7 +88,6 @@ class Segmentation_UNET():
         Y_test = np.array(Y_test)
         Y_test = Y_test.reshape(len(Y_test), self.input_shape[0], self.input_shape[1], 1)
 
-        self.model = self.initialize_model()
         print('Starting train..')
         TRAIN_LENGTH = len(X_test)
         BATCH_SIZE = min(5, TRAIN_LENGTH)
