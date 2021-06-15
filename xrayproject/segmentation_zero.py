@@ -56,48 +56,6 @@ class UNET():
         conv10 = Conv2D(1, (1, 1), activation='sigmoid')(conv9)
 
         unet = Model(inputs=[inputs], outputs=[conv10])
-
-
-        # unet = Sequential()
-        # inputs = Input(input_size)
-
-        # unet.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-        # unet.add(MaxPooling2D(pool_size=(2, 2)))
-
-        # unet.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
-        # unet.add(MaxPooling2D(pool_size=(2, 2)))
-
-        # unet.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
-        # unet.add(MaxPooling2D(pool_size=(2, 2)))
-
-        # unet.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
-        # unet.add(MaxPooling2D(pool_size=(2, 2)))
-
-        # unet.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(512, (3, 3), activation='relu', padding='same'))
-
-        # unet.add(concatenate([Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(conv5), conv4], axis=3))
-        # unet.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
-
-        # unet.add(concatenate([Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(conv6), conv3], axis=3))
-        # unet.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
-
-        # unet.add(concatenate([Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(conv7), conv2], axis=3))
-        # unet.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
-
-        # unet.add(concatenate([Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(conv8), conv1], axis=3))
-        # unet.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-        # unet.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
-
-        # unet.add(Conv2D(1, (1, 1), activation='sigmoid'))
-
         unet.compile(Adam(lr=0.001),
                      loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                      metrics=['accuracy'])
@@ -110,8 +68,8 @@ class UNET():
 
         return unet
 
-    def train(self, X_train, y_train, X_test, y_test):
-
+    def train(self, X_train, Y_train, X_test, Y_test):
+        # import pdb; pdb.set_trace()
         X_train = np.array(X_train)
         X_train = X_train.reshape(len(X_train),
                                   self.input_shape[0],
@@ -122,7 +80,7 @@ class UNET():
         Y_train = Y_train.reshape(len(Y_train),
                                   self.input_shape[0],
                                   self.input_shape[1],
-                                  self.input_shape[2])
+                                  1)
 
         X_test = np.array(X_test)
         X_test = X_test.reshape(len(X_test),
@@ -134,16 +92,21 @@ class UNET():
         Y_test = Y_test.reshape(len(Y_test),
                                 self.input_shape[0],
                                 self.input_shape[1],
-                                self.input_shape[2])
+                                1)
 
         print('Starting train..')
         # import pdb; pdb.set_trace()
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                      mode='min',
+                                                      patience=10,
+                                                      restore_best_weights=True)
 
         self.model.fit(X_train, Y_train,
-                       epochs=40,  # Use early stop in practice
-                       batch_size=32,
+                       epochs=60,  # Use early stop in practice
+                       batch_size=64,
                        validation_data=(X_test, Y_test),
-                       verbose=True)
+                       verbose=True,
+                       callbacks=[early_stop])
         return self.model
 
     # def unet(input_size=(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)):
