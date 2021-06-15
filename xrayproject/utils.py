@@ -2,11 +2,10 @@ import os
 import tensorflow as tf
 import random
 import numpy as np
-import PIL
 from PIL import Image
 from google.cloud import storage
 
-def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='', bucket_name=''):
+def load_pngs(n=1, get_all=False, get_random = True, balanced = True, path ='', bucket_name=''):
     # Load png and returns them as list of  img (tensor) , targets (bol)
     # If balanced = True, will attempt to divide n into equal parts of positive and negative samples
     # If random, will choose random images
@@ -15,8 +14,10 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='',
     # Keep n < 20 if you dont wanna run into memory problems
     # balanced only works with get_random
     # print('hello')
-    print('Using path: ', path)
-    print('Using bucket', bucket_name)
+    if path != '':
+        print('Using path: ', path)
+    if bucket_name != '':
+        print('Using bucket', bucket_name)
     list_of_filenames = get_filenames(path=path, bucket_name=bucket_name)
 
     assert len(list_of_filenames) != 0, 'List of filenames is empty'
@@ -26,16 +27,17 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='',
     ID = []
     if get_all:
         for file in list_of_filenames:
-            image = load_png(file)
+            image, target, file_ID = load_png(file)
             list_of_images.append(image)
-            targets.append(int(os.path.basename(file)[:-4].split('_')[2]))
-            ID.append(int(os.path.basename(file).split('_')[1]))
+            targets.append(target)
+            ID.append(file_ID)
         return list_of_images, targets, ID
 
     # Extract positive and negative samples
     positive, negative = [], []
     for file in list_of_filenames:
-        if int(os.path.basename(file)[:-4].split('_')[2]):
+        file_elements = os.path.splitext(os.path.basename(file))[0].split('_')
+        if int(file_elements[2]):
             positive.append(file)
         else:
             negative.append(file)
@@ -43,47 +45,84 @@ def load_masks(n=1, get_all=False, get_random = True, balanced = True, path ='',
         if n == 1:
             rand_index = random.randint(0, len(list_of_filenames))
             file = list_of_filenames[rand_index]
-            return load_png(file), int(os.path.basename(file).split('_')[2]), os.path.basename(file).split('_')[1]
+            image, target, file_ID = load_png(file)
+            return image, target, file_ID
         if balanced:
             pos = int(n/2)
             neg = int(n - pos)
-            rand_list_pos = [random.randint(0, len(positive)) for i in range(pos)]
-            rand_list_neg = [random.randint(0, len(negative)) for i in range(neg)]
+            rand_list_pos = [random.randint(0, len(positive)-1) for i in range(pos)]
+            rand_list_neg = [random.randint(0, len(negative)-1) for i in range(neg)]
             for i in rand_list_pos:
-                list_of_images.append(load_png(positive[i]))
-                targets.append(int(os.path.basename(positive[i]).split('_')[2]))
-                ID.append(int(os.path.basename(positive[i]).split('_')[1]))
+                file = positive[i]
+                image, target, file_ID = load_png(file)
+                list_of_images.append(image)
+                targets.append(target)
+                ID.append(file_ID)
             for i in rand_list_neg:
-                list_of_images.append(load_png(negative[i]))
-                targets.append(int(os.path.basename(negative[i]).split('_')[2]))
-                ID.append(int(os.path.basename(negative[i]).split('_')[1]))
+                file = negative[i]
+                image, target, file_ID = load_png(file)
+                list_of_images.append(image)
+                targets.append(target)
+                ID.append(file_ID)
             return list_of_images, targets, ID
         else:
-            rand_list = [random.randint(0, len(list_of_filenames)) for i in range(n)]
+            rand_list = [random.randint(0, len(list_of_filenames)-1) for i in range(n)]
             for i in rand_list:
-                list_of_images.append(load_png(list_of_filenames[i]))
-                targets.append(int(os.path.basename(list_of_filenames[i]).split('_')[2]))
-                ID.append(int(os.path.basename(list_of_filenames[i]).split('_')[1]))
-            return list_of_images, targets, ID
+                file = list_of_filenames[i]
+                image, target, file_ID = load_png(file)
+                list_of_images.append(image)
+                targets.append(target)
+                ID.append(file_ID)
+                return list_of_images, targets, ID
 
     for file in list_of_filenames[0:n]:
-        image = load_png(file)
+        image, target, file_ID = load_png(file)
         list_of_images.append(image)
-        targets.append(int(os.path.basename(file)[:-4].split('_')[2]))
-        ID.append(int(os.path.basename(file).split('_')[1]))
+        targets.append(target)
+        ID.append(file_ID)
     return list_of_images, targets, ID
 
 
-def load_train(ID, path='', bucket_name='', data='CXR_png'):
+def load_ID(ID, path='', bucket_name='', gfolder='CXR_png'):
     # Returns the mask (tensor), ID (int)
-    list_of_masks = list(range(len(ID)))
-    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name, data=data)
+    assert type(ID) == list, 'ID must be a list'
+    list_of_images = list(range(len(ID)))
+    targets = list(range(len(ID)))
+    list_of_filenames = get_filenames(path=path, bucket_name=bucket_name, gfolder=gfolder)
+
     for file in list_of_filenames:
-        file_ID = int(os.path.basename(file).split('_')[1])
+        file_elements = os.path.splitext(os.path.basename(file))[0].split('_')
+        file_ID = int(file_elements[1])
         for index, I_D in enumerate(ID):
             if file_ID == I_D:
-                list_of_masks[index] = load_png(file)
-    return list_of_masks, ID
+                list_of_images[index], targets[index], i = load_png(file)
+
+    return list_of_images, targets, ID
+
+
+def generate_batches(batch_size = 10,path='', bucket_name='', gfolder='CXR_png', get_all = False):
+    list_of_filenames = get_filenames(path = path, bucket_name = bucket_name, gfolder = gfolder) 
+    assert len(list_of_filenames) >= batch_size, 'Batch size exceed number of files in folder'
+    random.shuffle(list_of_filenames)
+    ID = [int(os.path.splitext(os.path.basename(file))[0].split('_')[1]) for file in list_of_filenames]
+    if get_all:
+        return ID
+    if len(list_of_filenames) % batch_size != 0:
+        n_batches = int(len(ID) / batch_size) + 1
+        print('Length of list is uneven: ', len(list_of_filenames))
+        print(f'Returning {n_batches} uneven batches')
+    else:
+        n_batches = int(len(ID) / batch_size)
+        print(f'Even size. Returning {n_batches} number of batches')
+
+    batches = [[] for i in range(n_batches)]
+    for batch_index in range(len(batches)):
+        for i in range(batch_size):
+            if ID:
+                batches[batch_index].append(ID.pop())
+
+    return batches
+
 
 def load_test(path):
     # Dont use
@@ -94,7 +133,7 @@ def spurious_funct():
     return "Does this exist? (I am not Camus. (Really. (Bugz-n-suqidz.)))"
 
 
-def get_filenames(bucket_name='', path='', data='mask'):
+def get_filenames(bucket_name='', path='', gfolder='mask'):
     list_of_filenames = []
     assert (len(bucket_name) != 0 or len(path) != 0), 'incorrect path format' 
     # print(os.path.join(os.path.dirname(__file__),'../raw_data/ChinaSet_AllFiles/CXR_png/'))
@@ -102,7 +141,7 @@ def get_filenames(bucket_name='', path='', data='mask'):
     if len(bucket_name) != 0:
         print('Generating list of filenames...')
         storage_client = storage.Client()
-        blobs = storage_client.list_blobs(bucket_name, prefix=f"data/{data}/", delimiter='/') 
+        blobs = storage_client.list_blobs(bucket_name, prefix=f"data/{gfolder}/", delimiter='/') 
         for blob in list(blobs):
             name = 'gs://'+bucket_name + '/' + blob.name
             if name.endswith('.png'):
@@ -117,17 +156,20 @@ def get_filenames(bucket_name='', path='', data='mask'):
 
 
 def load_png(file):
+    file_elements = os.path.splitext(os.path.basename(file))[0].split('_')
+    target = int(file_elements[2])
+    ID = int(file_elements[1])
     if file[0:2] == 'gs':
         print('Loading blob: ', file)
         f = tf.io.gfile.GFile(file, 'rb')
         image = f.read()
         image = tf.io.decode_png(image)
-        return image
+        return image, target, ID
 
     print('Loading local file: ', file)
     image = tf.io.read_file(file)
     image = tf.io.decode_png(image)
-    return image
+    return image, target, ID
 
 if __name__ == '__main__':
     print(load_png(0))
