@@ -11,6 +11,18 @@ def augment(images, masks):
     return images, masks, images_flipped, masks_flipped
 
 
+def enhance(images):
+    print('Enhancing images...')
+    images_enh = [tf.image.adjust_contrast(image, 1.5) for image in images]
+    return images_enh
+
+
+def rotate90(images):
+    print('Rotating images...')
+    images_rot = [tf.image.rot90(image) for image in images]
+    return images_rot
+
+
 def resize_normalize(images, masks, input_shape=(224, 224)):
     if len(images) != len(masks):
         print('Warning: number of images and masks are not the same')
