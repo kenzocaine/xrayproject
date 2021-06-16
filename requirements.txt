@@ -9,6 +9,7 @@ numpy==1.19.5
 pandas
 scikit-learn
 tensorflow
+scipy
 
 # tests/linter
 #black

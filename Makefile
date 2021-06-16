@@ -106,24 +106,42 @@ RUNTIME_VERSION=2.4
 ##### Package params  - - - - - - - - - - - - - - - - - - -
 
 PACKAGE_NAME=xrayproject
-FILENAME=main
+FILENAME_SEG=main_seg
 
 ##### Job - - - - - - - - - - - - - - - - - - - - - - - - -
 
-JOB_NAME=baseline_$(shell date +'%Y%m%d_%H%M%S')
+JOB_NAME_SEG=segmentation_$(shell date +'%Y%m%d_%H%M%S')
 
 run_locally:
 	@python -m ${PACKAGE_NAME}.${FILENAME}
 
-gcp_submit_training:
-	gcloud ai-platform jobs submit training ${JOB_NAME} \
+gcp_submit_seg_training:
+	gcloud ai-platform jobs submit training ${JOB_NAME_SEG} \
+		--scale-tier=BASIC_GPU \
 		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
 		--package-path ${PACKAGE_NAME} \
-		--module-name ${PACKAGE_NAME}.${FILENAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_SEG} \
 		--python-version=${PYTHON_VERSION} \
 		--runtime-version=${RUNTIME_VERSION} \
 		--region ${REGION} \
 		--stream-logs
+
+FILENAME_TB=main
+JOB_NAME_TB=tbclassification_$(shell date +'%Y%m%d_%H%M%S')
+
+
+gcp_submit_tb_training:
+	gcloud ai-platform jobs submit training ${JOB_NAME_TB} \
+		--scale-tier=BASIC_GPU \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_TB} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--stream-logs
+
+
 
 run_api:
 	uvicorn api.fast:app --reload  # load web server with code autoreload
