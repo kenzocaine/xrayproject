@@ -1,10 +1,11 @@
-# Data analysis
-- Document here the project: xrayproject
-- Description: Project Description
-- Data Source:
-- Type of analysis:
+# Automated X-ray image diagnosis
 
-Please document the project the better you can.
+- In collaboration with David McGady and Christian Hed
+- This project is meant to generalize to all kinds of pathological lung diseases that can be detected in an X-ray image
+- Segmentation is done using a modified U-net model
+- Classification is done using a conventional CNN
+- Data taken from https://www.kaggle.com/kmader/pulmonary-chest-xray-abnormalities
+
 
 # Startup the project
 
